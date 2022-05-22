@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class InitQueueEventListener {
 
   private final Channel channel;
+  private final RabbitTemplate rabbitTemplate;
 
   @Async
   @EventListener
@@ -31,7 +34,12 @@ public class InitQueueEventListener {
   }
 
   private DeliverCallback deliverCallback() {
-    return (tag, message) -> log.debug("Received : " + Longs.fromByteArray(message.getBody()));
+    return (tag, message) -> {
+      var number = Longs.fromByteArray(message.getBody());
+      var routingKey = message.getEnvelope().getRoutingKey();
+      log.debug("Received : {} from {}", number, message.getEnvelope().getRoutingKey());
+      rabbitTemplate.convertAndSend(routingKey, Longs.toByteArray(RandomUtils.nextLong(1, 100)));
+    };
   }
 
   private CancelCallback cancelCallback() {

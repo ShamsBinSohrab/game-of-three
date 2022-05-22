@@ -1,6 +1,7 @@
 package app.player.listeners;
 
 import app.player.events.GameStartEvent;
+import app.player.game.GameInitRequest;
 import com.google.common.primitives.Longs;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomUtils;
@@ -18,7 +19,8 @@ public class GameStartEventListener {
   @Async
   @EventListener
   public void doStartGame(GameStartEvent event) {
-    var queue = (String) event.getSource();
-    rabbitTemplate.convertAndSend(queue, Longs.toByteArray(RandomUtils.nextLong(1, 100)));
+    var request = (GameInitRequest) event.getSource();
+    rabbitTemplate.convertAndSend(
+        request.outgoingQueue(), Longs.toByteArray(RandomUtils.nextLong(1, 100)));
   }
 }

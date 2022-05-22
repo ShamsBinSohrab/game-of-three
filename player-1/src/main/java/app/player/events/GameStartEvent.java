@@ -1,10 +1,11 @@
 package app.player.events;
 
+import app.player.game.GameInitRequest;
 import org.springframework.context.ApplicationEvent;
 
 public class GameStartEvent extends ApplicationEvent {
 
-  public GameStartEvent(String queue) {
-    super(queue);
+  public GameStartEvent(GameInitRequest source) {
+    super(source);
   }
 }
