@@ -1,5 +1,7 @@
 package app.player;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+
 import app.player.game.GameInitRequest;
 import app.player.rabbitmq.RabbitService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,10 @@ public class Runner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    var request = new GameInitRequest("incoming", "outgoing");
+    var incomingQueue = randomAlphanumeric(10);
+    var outgoingQueue = randomAlphanumeric(10);
+    var request = new GameInitRequest(incomingQueue, outgoingQueue);
+    rabbitService.addQueue(outgoingQueue, outgoingQueue);
     rabbitTemplate.convertAndSend("main", request);
   }
 }

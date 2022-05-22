@@ -1,10 +1,11 @@
-package app.player.configuration;
+package app.player.rabbitmq;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
@@ -47,5 +48,10 @@ public class RabbitConfiguration {
     factory.setPassword(properties.getPassword());
     factory.setVirtualHost(properties.getVirtualHost());
     return factory;
+  }
+
+  @Bean
+  public RabbitAdmin rabbitAdmin(CachingConnectionFactory connectionFactory) {
+    return new RabbitAdmin(connectionFactory);
   }
 }
