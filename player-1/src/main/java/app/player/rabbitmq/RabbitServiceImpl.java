@@ -1,27 +1,25 @@
 package app.player.rabbitmq;
 
+import com.rabbitmq.client.Channel;
+import java.io.IOException;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.core.RabbitAdmin;
-import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 class RabbitServiceImpl implements RabbitService {
 
-  private final RabbitAdmin rabbitAdmin;
-  private final RabbitListenerEndpointRegistry rabbitListenerEndpointRegistry;
+  private final Channel channel;
 
   @Override
   public void addQueue(String queueName, String exchangeName) {
-    var queue = new Queue(queueName, false, false, true);
-    var exchange = new DirectExchange(exchangeName);
-    var binding = BindingBuilder.bind(queue).to(exchange).with("");
-    rabbitAdmin.declareExchange(exchange);
-    rabbitAdmin.declareQueue(queue);
-    rabbitAdmin.declareBinding(binding);
+    try {
+      channel.queueDeclare(queueName, false, false, true, Collections.emptyMap());
+    } catch (IOException ex) {
+      log.error(ex.getMessage(), ex);
+    }
   }
 }
