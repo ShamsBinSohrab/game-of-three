@@ -8,6 +8,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -30,19 +31,35 @@ public class InitQueueEventListener {
     var request = (GameInitRequest) event.getSource();
     channel.queueDeclare(request.incomingQueue(), false, false, true, Collections.emptyMap());
     channel.queueDeclare(request.outgoingQueue(), false, false, true, Collections.emptyMap());
-    channel.basicConsume(request.outgoingQueue(), deliverCallback(), cancelCallback());
+    channel.basicConsume(
+        request.outgoingQueue(), deliverCallback(request.outgoingQueue()), cancelCallback());
   }
 
-  private DeliverCallback deliverCallback() {
+  private DeliverCallback deliverCallback(String replyTo) {
     return (tag, message) -> {
       var number = Longs.fromByteArray(message.getBody());
-      var routingKey = message.getEnvelope().getRoutingKey();
+      var routingKey = message.getProperties().getReplyTo();
       log.debug("Received : {} from {}", number, message.getEnvelope().getRoutingKey());
-      rabbitTemplate.convertAndSend(routingKey, Longs.toByteArray(RandomUtils.nextLong(1, 100)));
+      sleep(1);
+      rabbitTemplate.convertAndSend(
+          routingKey,
+          Longs.toByteArray(RandomUtils.nextLong(1, 100)),
+          msg -> {
+            msg.getMessageProperties().setReplyTo(replyTo);
+            return msg;
+          });
     };
   }
 
   private CancelCallback cancelCallback() {
     return (tag) -> log.debug("Cancelled: " + tag);
+  }
+
+  static void sleep(int time) {
+    try {
+      TimeUnit.SECONDS.sleep(time);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }
