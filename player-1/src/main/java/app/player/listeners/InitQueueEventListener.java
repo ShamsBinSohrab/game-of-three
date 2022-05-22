@@ -25,8 +25,8 @@ public class InitQueueEventListener {
   @EventListener
   public void doInitQueues(InitQueueEvent event) throws IOException {
     var request = (GameInitRequest) event.getSource();
-    channel.queueDeclare(request.incomingQueue(), false, true, true, Collections.emptyMap());
-    channel.queueDeclare(request.outgoingQueue(), false, true, true, Collections.emptyMap());
+    channel.queueDeclare(request.incomingQueue(), false, false, true, Collections.emptyMap());
+    channel.queueDeclare(request.outgoingQueue(), false, false, true, Collections.emptyMap());
     channel.basicConsume(request.incomingQueue(), deliverCallback(), cancelCallback());
   }
 
