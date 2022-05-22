@@ -19,6 +19,7 @@
 
     <modules>
         <module>player-1</module>
+        <module>player-2</module>
     </modules>
 
     <properties>
