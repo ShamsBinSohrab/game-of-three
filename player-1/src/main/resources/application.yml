@@ -14,3 +14,6 @@ spring:
     username: guest
     password: guest
     virtual-host: /
+logging:
+  level:
+    app: debug

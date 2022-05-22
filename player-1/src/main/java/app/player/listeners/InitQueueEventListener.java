@@ -1,5 +1,6 @@
 package app.player.listeners;
 
+import app.player.events.GameStartEvent;
 import app.player.events.InitQueueEvent;
 import app.player.game.GameInitRequest;
 import com.google.common.primitives.Longs;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class InitQueueEventListener {
 
   private final Channel channel;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Async
   @EventListener
@@ -28,6 +31,7 @@ public class InitQueueEventListener {
     channel.queueDeclare(request.incomingQueue(), false, false, true, Collections.emptyMap());
     channel.queueDeclare(request.outgoingQueue(), false, false, true, Collections.emptyMap());
     channel.basicConsume(request.incomingQueue(), deliverCallback(), cancelCallback());
+    applicationEventPublisher.publishEvent(new GameStartEvent(request.outgoingQueue()));
   }
 
   private DeliverCallback deliverCallback() {
