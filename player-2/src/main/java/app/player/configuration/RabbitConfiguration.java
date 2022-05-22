@@ -1,4 +1,4 @@
-package app.player.rabbitmq;
+package app.player.configuration;
 
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Binding;
