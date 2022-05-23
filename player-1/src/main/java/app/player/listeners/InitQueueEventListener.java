@@ -46,9 +46,14 @@ public class InitQueueEventListener {
   private DeliverCallback deliverCallback(String queue) {
     return (tag, message) -> {
       var opponentMove = (Move) deserialize(message.getBody());
+      log.debug(
+          "Received message: {}, move: {}",
+          message.getProperties().getCorrelationId(),
+          opponentMove);
       var nextMove = opponentMove.newMove();
       var correlationId = UUID.randomUUID().toString();
       sleep(2);
+      log.debug("Sending message: {}, move: {}", correlationId, nextMove);
       rabbitTemplate.convertAndSend(
           outgoingQueue,
           nextMove,

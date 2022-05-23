@@ -20,8 +20,12 @@ public class Runner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    var move = new Move(nextInt(1, 100));
-    var gameStartEvent = new GameStartEvent(move);
-    applicationEventPublisher.publishEvent(gameStartEvent);
+    var move1 = new Move(nextInt(1, 100));
+    var gameStartEvent1 = new GameStartEvent(move1);
+    applicationEventPublisher.publishEvent(gameStartEvent1);
+
+    var move2 = new Move(nextInt(1, 100));
+    var gameStartEvent2 = new GameStartEvent(move2);
+    applicationEventPublisher.publishEvent(gameStartEvent2);
   }
 }

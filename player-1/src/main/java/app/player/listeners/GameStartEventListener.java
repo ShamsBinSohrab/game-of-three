@@ -39,10 +39,11 @@ public class GameStartEventListener {
     rabbitTemplate.convertAndSend(
         outgoingQueue,
         move,
-        message -> {
-          message.getMessageProperties().setCorrelationId(correlationId);
-          message.getMessageProperties().setReplyTo(event.getReplyToQueue());
-          return message;
+        msg -> {
+          msg.getMessageProperties().setCorrelationId(correlationId);
+          msg.getMessageProperties().setReplyTo(event.getReplyToQueue());
+          return msg;
         });
+    log.debug("Message {}, initial move: {}", correlationId, move);
   }
 }
