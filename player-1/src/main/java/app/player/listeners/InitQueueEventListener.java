@@ -9,6 +9,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,17 +40,24 @@ public class InitQueueEventListener {
     applicationEventPublisher.publishEvent(new GameStartEvent(request));
   }
 
-  private DeliverCallback deliverCallback(String replyTo) {
+  private DeliverCallback deliverCallback(String incoming) {
     return (tag, message) -> {
       var number = Longs.fromByteArray(message.getBody());
-      var routingKey = message.getProperties().getReplyTo();
-      log.debug("Received : {} from {}", number, message.getEnvelope().getRoutingKey());
+      var newNumber = RandomUtils.nextLong(1, 100);
+      var correlationId = UUID.randomUUID().toString();
+      log.debug(
+          "Message {} received : {}, sending {} to {}",
+          message.getProperties().getCorrelationId(),
+          number,
+          newNumber,
+          message.getProperties().getReplyTo());
       sleep(1);
       rabbitTemplate.convertAndSend(
-          routingKey,
-          Longs.toByteArray(RandomUtils.nextLong(1, 100)),
+          message.getProperties().getReplyTo(),
+          Longs.toByteArray(newNumber),
           msg -> {
-            msg.getMessageProperties().setReplyTo(replyTo);
+            msg.getMessageProperties().setCorrelationId(correlationId);
+            msg.getMessageProperties().setReplyTo(incoming);
             return msg;
           });
     };
