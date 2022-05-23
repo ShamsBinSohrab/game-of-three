@@ -1,4 +1,4 @@
-package app.player.game;
+package app.player.domains;
 
 import java.io.Serializable;
 

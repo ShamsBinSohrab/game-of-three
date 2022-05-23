@@ -1,7 +1,7 @@
 package app.player.listeners;
 
+import app.player.domains.GameInitRequest;
 import app.player.events.InitQueueEvent;
-import app.player.game.GameInitRequest;
 import com.google.common.primitives.Longs;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;

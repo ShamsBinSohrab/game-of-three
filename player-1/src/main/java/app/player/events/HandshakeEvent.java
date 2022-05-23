@@ -1,6 +1,6 @@
 package app.player.events;
 
-import app.player.game.GameInitRequest;
+import app.player.domains.GameInitRequest;
 import org.springframework.context.ApplicationEvent;
 
 public class HandshakeEvent extends ApplicationEvent {

@@ -1,7 +1,7 @@
 package app.player.listeners;
 
+import app.player.domains.GameInitRequest;
 import app.player.events.InitQueueEvent;
-import app.player.game.GameInitRequest;
 import com.rabbitmq.client.Channel;
 import java.io.IOException;
 import java.util.Collections;

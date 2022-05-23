@@ -1,7 +1,7 @@
 package app.player.listeners;
 
+import app.player.domains.GameInitRequest;
 import app.player.events.GameStartEvent;
-import app.player.game.GameInitRequest;
 import com.google.common.primitives.Longs;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

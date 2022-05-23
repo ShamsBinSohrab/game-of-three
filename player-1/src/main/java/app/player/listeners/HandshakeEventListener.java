@@ -1,8 +1,8 @@
 package app.player.listeners;
 
+import app.player.domains.GameInitRequest;
 import app.player.events.HandshakeEvent;
 import app.player.events.InitQueueEvent;
-import app.player.game.GameInitRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;

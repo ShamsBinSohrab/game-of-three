@@ -2,8 +2,8 @@ package app.player;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
+import app.player.domains.GameInitRequest;
 import app.player.events.HandshakeEvent;
-import app.player.game.GameInitRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
