@@ -2,9 +2,7 @@ package app.player.listeners;
 
 import static org.springframework.util.SerializationUtils.deserialize;
 
-import app.player.domains.GameInitRequest;
 import app.player.domains.Move;
-import app.player.events.GameStartEvent;
 import app.player.events.InitQueueEvent;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
@@ -13,52 +11,50 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class InitQueueEventListener {
 
   private final Channel channel;
-  private final ApplicationEventPublisher applicationEventPublisher;
   private final RabbitTemplate rabbitTemplate;
+  private final String outgoingQueue;
+
+  public InitQueueEventListener(
+      Channel channel,
+      RabbitTemplate rabbitTemplate,
+      @Value("${game.queue.name}") String outgoingQueue) {
+    this.channel = channel;
+    this.rabbitTemplate = rabbitTemplate;
+    this.outgoingQueue = outgoingQueue;
+  }
 
   @Async
   @EventListener
   public void doInitQueues(InitQueueEvent event) throws IOException {
-    var request = (GameInitRequest) event.getSource();
-    channel.queueDeclare(request.outgoingQueue(), false, false, true, Collections.emptyMap());
-    channel.queueDeclare(request.incomingQueue(), false, false, true, Collections.emptyMap());
-    channel.basicConsume(
-        request.incomingQueue(), deliverCallback(request.incomingQueue()), cancelCallback());
-    applicationEventPublisher.publishEvent(new GameStartEvent(request));
+    var queue = (String) event.getSource();
+    channel.queueDeclare(queue, false, false, true, Collections.emptyMap());
+    channel.basicConsume(queue, deliverCallback(queue), cancelCallback());
   }
 
-  private DeliverCallback deliverCallback(String incoming) {
+  private DeliverCallback deliverCallback(String queue) {
     return (tag, message) -> {
-      var currentMove = (Move) deserialize(message.getBody());
-      var nextMove = currentMove.newMove();
+      var opponentMove = (Move) deserialize(message.getBody());
+      var nextMove = opponentMove.newMove();
       var correlationId = UUID.randomUUID().toString();
-      log.debug(
-          "Received {}, id: {} <=> Sending {}, id: {}",
-          currentMove.number(),
-          message.getProperties().getCorrelationId(),
-          nextMove.number(),
-          correlationId);
       sleep(2);
       rabbitTemplate.convertAndSend(
-          message.getProperties().getReplyTo(),
+          outgoingQueue,
           nextMove,
           msg -> {
             msg.getMessageProperties().setCorrelationId(correlationId);
-            msg.getMessageProperties().setReplyTo(incoming);
+            msg.getMessageProperties().setReplyTo(queue);
             return msg;
           });
     };

@@ -1,39 +1,48 @@
 package app.player.listeners;
 
-import app.player.domains.GameInitRequest;
 import app.player.domains.Move;
 import app.player.events.GameStartEvent;
+import app.player.events.InitQueueEvent;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class GameStartEventListener {
 
   private final RabbitTemplate rabbitTemplate;
+  private final ApplicationEventPublisher applicationEventPublisher;
+  private final String outgoingQueue;
+
+  public GameStartEventListener(
+      RabbitTemplate rabbitTemplate,
+      ApplicationEventPublisher applicationEventPublisher,
+      @Value("${game.queue.name}") String outgoingQueue) {
+    this.rabbitTemplate = rabbitTemplate;
+    this.applicationEventPublisher = applicationEventPublisher;
+    this.outgoingQueue = outgoingQueue;
+  }
 
   @Async
   @EventListener
   public void doStartGame(GameStartEvent event) {
-    var request = (GameInitRequest) event.getSource();
-    var number = RandomUtils.nextInt(1, 100);
-    var move = new Move(number);
+    var move = (Move) event.getSource();
     var correlationId = UUID.randomUUID().toString();
-    log.debug("Sending {}, id: {}", move.number(), correlationId);
+    var initQueueEvent = new InitQueueEvent(event.getReplyToQueue());
+    applicationEventPublisher.publishEvent(initQueueEvent);
     rabbitTemplate.convertAndSend(
-        request.outgoingQueue(),
+        outgoingQueue,
         move,
-        msg -> {
-          msg.getMessageProperties().setCorrelationId(correlationId);
-          msg.getMessageProperties().setReplyTo(request.incomingQueue());
-          return msg;
+        message -> {
+          message.getMessageProperties().setCorrelationId(correlationId);
+          message.getMessageProperties().setReplyTo(event.getReplyToQueue());
+          return message;
         });
   }
 }

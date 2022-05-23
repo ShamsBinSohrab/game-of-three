@@ -1,9 +1,9 @@
 package app.player;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.apache.commons.lang3.RandomUtils.nextInt;
 
-import app.player.domains.GameInitRequest;
-import app.player.events.HandshakeEvent;
+import app.player.domains.Move;
+import app.player.events.GameStartEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -20,8 +20,8 @@ public class Runner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    var request = new GameInitRequest(randomAlphanumeric(10), randomAlphanumeric(10));
-    var handshake = new HandshakeEvent(request);
-    applicationEventPublisher.publishEvent(handshake);
+    var move = new Move(nextInt(1, 100));
+    var gameStartEvent = new GameStartEvent(move);
+    applicationEventPublisher.publishEvent(gameStartEvent);
   }
 }

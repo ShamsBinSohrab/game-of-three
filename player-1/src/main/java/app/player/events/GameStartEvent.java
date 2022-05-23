@@ -1,11 +1,16 @@
 package app.player.events;
 
-import app.player.domains.GameInitRequest;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+
+import app.player.domains.Move;
+import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 public class GameStartEvent extends ApplicationEvent {
 
-  public GameStartEvent(GameInitRequest source) {
-    super(source);
+  @Getter private final String replyToQueue = randomAlphanumeric(10);
+
+  public GameStartEvent(Move move) {
+    super(move);
   }
 }
