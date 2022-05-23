@@ -1,8 +1,8 @@
 package app.player.listeners;
 
 import app.player.domains.GameInitRequest;
+import app.player.domains.Move;
 import app.player.events.GameStartEvent;
-import com.google.common.primitives.Longs;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +23,13 @@ public class GameStartEventListener {
   @EventListener
   public void doStartGame(GameStartEvent event) {
     var request = (GameInitRequest) event.getSource();
-    var number = RandomUtils.nextLong(1, 100);
+    var number = RandomUtils.nextInt(1, 100);
+    var move = new Move(number);
     var correlationId = UUID.randomUUID().toString();
-    log.debug("Message {}, sending {} to {}", correlationId, number, request.outgoingQueue());
+    log.debug("Sending {}, id: {}", move.number(), correlationId);
     rabbitTemplate.convertAndSend(
         request.outgoingQueue(),
-        Longs.toByteArray(number),
+        move,
         msg -> {
           msg.getMessageProperties().setCorrelationId(correlationId);
           msg.getMessageProperties().setReplyTo(request.incomingQueue());

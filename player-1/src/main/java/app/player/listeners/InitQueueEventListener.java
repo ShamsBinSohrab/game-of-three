@@ -1,9 +1,11 @@
 package app.player.listeners;
 
+import static org.springframework.util.SerializationUtils.deserialize;
+
 import app.player.domains.GameInitRequest;
+import app.player.domains.Move;
 import app.player.events.GameStartEvent;
 import app.player.events.InitQueueEvent;
-import com.google.common.primitives.Longs;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
@@ -13,7 +15,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -42,19 +43,19 @@ public class InitQueueEventListener {
 
   private DeliverCallback deliverCallback(String incoming) {
     return (tag, message) -> {
-      var number = Longs.fromByteArray(message.getBody());
-      var newNumber = RandomUtils.nextLong(1, 100);
+      var currentMove = (Move) deserialize(message.getBody());
+      var nextMove = currentMove.newMove();
       var correlationId = UUID.randomUUID().toString();
       log.debug(
-          "Message {} received : {}, sending {} to {}",
+          "Received {}, id: {} <=> Sending {}, id: {}",
+          currentMove.number(),
           message.getProperties().getCorrelationId(),
-          number,
-          newNumber,
-          message.getProperties().getReplyTo());
-      sleep(1);
+          nextMove.number(),
+          correlationId);
+      sleep(2);
       rabbitTemplate.convertAndSend(
           message.getProperties().getReplyTo(),
-          Longs.toByteArray(newNumber),
+          nextMove,
           msg -> {
             msg.getMessageProperties().setCorrelationId(correlationId);
             msg.getMessageProperties().setReplyTo(incoming);
