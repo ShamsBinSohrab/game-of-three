@@ -1,14 +1,12 @@
 package app.player.listeners;
 
-import app.player.domains.GameInitRequest;
-import app.player.events.InitQueueEvent;
-import com.rabbitmq.client.Channel;
-import java.io.IOException;
-import java.util.Collections;
+import app.player.domains.Move;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -16,17 +14,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class GameRequestListener {
 
-  private final Channel channel;
-  private final ApplicationEventPublisher applicationEventPublisher;
+  private final RabbitTemplate rabbitTemplate;
 
-  @RabbitListener(queues = "game-of-three")
-  void listenGameRequest(GameInitRequest request) throws IOException {
-    log.debug(
-        "Received handshake request, incoming: {} and outgoing: {}",
-        request.incomingQueue(),
-        request.outgoingQueue());
-    channel.queueDeclare(request.incomingQueue(), false, false, true, Collections.emptyMap());
-    channel.queueDeclare(request.outgoingQueue(), false, false, true, Collections.emptyMap());
-    applicationEventPublisher.publishEvent(new InitQueueEvent(request));
+  @RabbitListener(queues = "game-queue")
+  void listenGameRequest(Move move, Message message) {
+    var nextMove = move.newMove();
+    var correlationData = new CorrelationData();
+    rabbitTemplate.convertAndSend(
+        message.getMessageProperties().getReplyTo(), nextMove, correlationData);
   }
 }

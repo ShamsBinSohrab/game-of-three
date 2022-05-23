@@ -1,8 +1,8 @@
 game:
   queue:
-    name: game-of-three
+    name: game-queue
   exchange:
-    name: game-of-three
+    name: game-queue
 server:
   port: 9092
 spring:
