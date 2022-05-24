@@ -21,14 +21,18 @@ public class GameRequestListener {
     log.debug(
         "Received message: {}, move: {}", message.getMessageProperties().getCorrelationId(), move);
     var nextMove = move.newMove();
-    var correlationId = UUID.randomUUID().toString();
-    log.debug("Sending message: {}, move: {}", correlationId, nextMove);
-    rabbitTemplate.convertAndSend(
-        message.getMessageProperties().getReplyTo(),
-        nextMove,
-        msg -> {
-          msg.getMessageProperties().setCorrelationId(correlationId);
-          return msg;
-        });
+    if (nextMove.didIWin()) {
+      log.debug("I won");
+    } else {
+      var correlationId = UUID.randomUUID().toString();
+      log.debug("Sending message: {}, move: {}", correlationId, nextMove);
+      rabbitTemplate.convertAndSend(
+          message.getMessageProperties().getReplyTo(),
+          nextMove,
+          msg -> {
+            msg.getMessageProperties().setCorrelationId(correlationId);
+            return msg;
+          });
+    }
   }
 }

@@ -51,17 +51,21 @@ public class InitQueueEventListener {
           message.getProperties().getCorrelationId(),
           opponentMove);
       var nextMove = opponentMove.newMove();
-      var correlationId = UUID.randomUUID().toString();
-      sleep(2);
-      log.debug("Sending message: {}, move: {}", correlationId, nextMove);
-      rabbitTemplate.convertAndSend(
-          outgoingQueue,
-          nextMove,
-          msg -> {
-            msg.getMessageProperties().setCorrelationId(correlationId);
-            msg.getMessageProperties().setReplyTo(queue);
-            return msg;
-          });
+      if (nextMove.didIWin()) {
+        log.debug("I won");
+      } else {
+        var correlationId = UUID.randomUUID().toString();
+        sleep(2);
+        log.debug("Sending message: {}, move: {}", correlationId, nextMove);
+        rabbitTemplate.convertAndSend(
+            outgoingQueue,
+            nextMove,
+            msg -> {
+              msg.getMessageProperties().setCorrelationId(correlationId);
+              msg.getMessageProperties().setReplyTo(queue);
+              return msg;
+            });
+      }
     };
   }
 
