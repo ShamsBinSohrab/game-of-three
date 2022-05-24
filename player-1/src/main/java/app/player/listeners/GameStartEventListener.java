@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import app.player.domains.Move;
 import app.player.events.GameStartEvent;
 import app.player.events.InitiateConsumerEvent;
+import app.player.events.LogSentMoveEvent;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.MessagePostProcessor;
@@ -38,14 +39,13 @@ public class GameStartEventListener {
   public void doStartGame(GameStartEvent event) {
     var gameId = (UUID) event.getSource();
     var incomingQueue = randomAlphanumeric(10);
-
-    applicationEventPublisher.publishEvent(new InitiateConsumerEvent(incomingQueue));
-
     var number = nextInt();
     var move = new Move(gameId, number);
     var correlationId = UUID.randomUUID();
+    applicationEventPublisher.publishEvent(new InitiateConsumerEvent(incomingQueue));
     rabbitTemplate.convertAndSend(
         outgoingQueue, move, messagePostProcessor(correlationId, incomingQueue));
+    applicationEventPublisher.publishEvent(new LogSentMoveEvent(move, correlationId));
   }
 
   private MessagePostProcessor messagePostProcessor(UUID correlationId, String incomingQueue) {

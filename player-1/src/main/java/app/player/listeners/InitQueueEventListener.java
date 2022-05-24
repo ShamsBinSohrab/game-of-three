@@ -10,6 +10,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,8 +50,9 @@ public class InitQueueEventListener {
   private DeliverCallback deliverCallback(String incomingQueue) {
     return (tag, message) -> {
       var move = (Move) deserialize(message.getBody());
-      log.debug("Received message: {}, move: {}", message.getProperties().getCorrelationId(), move);
-      applicationEventPublisher.publishEvent(new ReplyMoveEvent(move, incomingQueue));
+      var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
+      applicationEventPublisher.publishEvent(
+          new ReplyMoveEvent(move, incomingQueue, correlationId));
     };
   }
 

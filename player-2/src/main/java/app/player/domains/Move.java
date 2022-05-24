@@ -1,8 +1,9 @@
 package app.player.domains;
 
 import java.io.Serializable;
+import java.util.UUID;
 
-public record Move(int number) implements Serializable {
+public record Move(UUID gameId, int number) implements Serializable {
 
   private static final short POSITIVE_ONE = 1;
   private static final short ZERO = 0;
@@ -10,7 +11,7 @@ public record Move(int number) implements Serializable {
   private static final short DIVISOR = 3;
 
   public Move newMove() {
-    return new Move(calculateNext());
+    return new Move(gameId, calculateNext());
   }
 
   public boolean didIWin() {
