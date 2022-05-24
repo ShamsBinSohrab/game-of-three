@@ -1,9 +1,7 @@
 package app.player;
 
-import static org.apache.commons.lang3.RandomUtils.nextInt;
-
-import app.player.domains.Move;
 import app.player.events.GameStartEvent;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -20,8 +18,8 @@ public class Runner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    var move1 = new Move(nextInt(1, 100));
-    var gameStartEvent1 = new GameStartEvent(move1);
-    applicationEventPublisher.publishEvent(gameStartEvent1);
+    var gameId = UUID.randomUUID();
+    var gameStartEvent = new GameStartEvent(gameId);
+    applicationEventPublisher.publishEvent(gameStartEvent);
   }
 }

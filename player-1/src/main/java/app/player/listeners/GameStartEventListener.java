@@ -1,10 +1,14 @@
 package app.player.listeners;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.apache.commons.lang3.RandomUtils.nextInt;
+
 import app.player.domains.Move;
 import app.player.events.GameStartEvent;
-import app.player.events.InitQueueEvent;
+import app.player.events.InitiateConsumerEvent;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,18 +36,23 @@ public class GameStartEventListener {
   @Async
   @EventListener
   public void doStartGame(GameStartEvent event) {
-    var move = (Move) event.getSource();
-    var correlationId = UUID.randomUUID().toString();
-    var initQueueEvent = new InitQueueEvent(event.getReplyToQueue());
-    applicationEventPublisher.publishEvent(initQueueEvent);
+    var gameId = (UUID) event.getSource();
+    var incomingQueue = randomAlphanumeric(10);
+
+    applicationEventPublisher.publishEvent(new InitiateConsumerEvent(incomingQueue));
+
+    var number = nextInt();
+    var move = new Move(gameId, number);
+    var correlationId = UUID.randomUUID();
     rabbitTemplate.convertAndSend(
-        outgoingQueue,
-        move,
-        msg -> {
-          msg.getMessageProperties().setCorrelationId(correlationId);
-          msg.getMessageProperties().setReplyTo(event.getReplyToQueue());
-          return msg;
-        });
-    log.debug("Message {}, initial move: {}", correlationId, move);
+        outgoingQueue, move, messagePostProcessor(correlationId, incomingQueue));
+  }
+
+  private MessagePostProcessor messagePostProcessor(UUID correlationId, String incomingQueue) {
+    return message -> {
+      message.getMessageProperties().setCorrelationId(correlationId.toString());
+      message.getMessageProperties().setReplyTo(incomingQueue);
+      return message;
+    };
   }
 }

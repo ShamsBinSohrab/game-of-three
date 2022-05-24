@@ -3,7 +3,7 @@ package app.player.listeners;
 import static org.springframework.util.SerializationUtils.deserialize;
 
 import app.player.domains.Move;
-import app.player.events.InitQueueEvent;
+import app.player.events.InitiateConsumerEvent;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
@@ -37,7 +37,7 @@ public class InitQueueEventListener {
 
   @Async
   @EventListener
-  public void doInitQueues(InitQueueEvent event) throws IOException {
+  public void doInitQueues(InitiateConsumerEvent event) throws IOException {
     var queue = (String) event.getSource();
     channel.queueDeclare(queue, false, false, true, Collections.emptyMap());
     channel.basicConsume(queue, deliverCallback(queue), cancelCallback());
