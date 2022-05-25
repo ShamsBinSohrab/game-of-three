@@ -3,8 +3,8 @@ package app.player.listeners;
 import static org.springframework.util.SerializationUtils.deserialize;
 
 import app.player.domains.Move;
+import app.player.events.EventFactory;
 import app.player.events.InitiateConsumerEvent;
-import app.player.events.ReplyMoveEvent;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,7 @@ import org.springframework.stereotype.Component;
 public class InitQueueEventListener {
 
   private final Channel channel;
-  private final ApplicationEventPublisher applicationEventPublisher;
+  private final EventFactory eventFactory;
 
   @Async
   @EventListener
@@ -35,18 +34,18 @@ public class InitQueueEventListener {
     channel.basicConsume(incomingQueue, deliverCallback(incomingQueue), cancelCallback());
   }
 
-  private DeliverCallback deliverCallback(String incomingQueue) {
+  private DeliverCallback deliverCallback(String queue) {
     return (tag, message) -> {
       var move = (Move) deserialize(message.getBody());
       if (Objects.nonNull(move)) {
+        var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
+        eventFactory.logReceivedMove(move, correlationId);
         if (move.didOpponentWin()) {
           log.info("Opponent won game: {}", move.gameId());
-          channel.basicCancel(tag);
+          eventFactory.cancelConsumer(tag);
           return;
         }
-        var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
-        applicationEventPublisher.publishEvent(
-            new ReplyMoveEvent(move, incomingQueue, correlationId));
+        eventFactory.replyMove(move, tag, queue);
       }
     };
   }

@@ -1,11 +1,10 @@
 package app.player.web;
 
-import app.player.events.GameStartEvent;
+import app.player.events.EventFactory;
 import app.player.web.models.GameRequest;
 import app.player.web.models.GameResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,13 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/game")
 public class GameController {
 
-  private final ApplicationEventPublisher applicationEventPublisher;
+  private final EventFactory eventFactory;
 
   @PostMapping("/start")
   @ResponseStatus(HttpStatus.ACCEPTED)
   GameResponse start(@RequestBody GameRequest request) {
     var gameId = UUID.randomUUID();
-    applicationEventPublisher.publishEvent(new GameStartEvent(gameId, request.userInput()));
+    eventFactory.gameStart(gameId, request.userInput());
     return new GameResponse(gameId);
   }
 }
