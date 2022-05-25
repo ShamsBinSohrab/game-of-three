@@ -1,8 +1,8 @@
-package app.player;
+package app.player.web;
 
 import app.player.events.GameStartEvent;
-import app.player.models.GameRequest;
-import app.player.models.GameResponse;
+import app.player.web.models.GameRequest;
+import app.player.web.models.GameResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

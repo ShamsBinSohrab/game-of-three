@@ -1,4 +1,4 @@
-package app.player.models;
+package app.player.web.models;
 
 import java.util.UUID;
 
