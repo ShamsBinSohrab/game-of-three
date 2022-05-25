@@ -41,7 +41,7 @@ public class ReplyMoveEventListener {
       log.info("I won game: {}", nextMove.gameId());
       rabbitTemplate.convertAndSend(
           outgoingQueue, nextMove.checkmate(), postProcessor(correlationId, null));
-      eventFactory.cancelConsumer(incomingQueue);
+      eventFactory.cancelConsumer(event.getTag());
       return;
     }
     rabbitTemplate.convertAndSend(

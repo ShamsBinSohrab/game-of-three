@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class InitQueueEventListener {
+public class InitiateConsumerEventListener {
 
   private final Channel channel;
   private final EventFactory eventFactory;

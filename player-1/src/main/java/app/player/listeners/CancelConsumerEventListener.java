@@ -18,8 +18,12 @@ public class CancelConsumerEventListener {
 
   @Async
   @EventListener
-  public void onDeleteQueue(CancelConsumerEvent event) throws IOException {
-    var tag = (String) event.getSource();
-    channel.basicCancel(tag);
+  public void onCancelConsumer(CancelConsumerEvent event) throws IOException {
+    try {
+      var tag = (String) event.getSource();
+      channel.basicCancel(tag);
+    } catch (IOException ex) {
+      log.error(ex.getMessage());
+    }
   }
 }
