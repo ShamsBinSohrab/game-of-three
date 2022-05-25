@@ -1,15 +1,20 @@
 package app.player.events;
 
+import java.util.Optional;
 import java.util.UUID;
-import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.lang.Nullable;
 
 public class GameStartEvent extends ApplicationEvent {
 
-  @Getter private final boolean userInput;
+  private final Integer number;
 
-  public GameStartEvent(UUID gameId, boolean userInput) {
+  public GameStartEvent(UUID gameId, @Nullable Integer number) {
     super(gameId);
-    this.userInput = userInput;
+    this.number = number;
+  }
+
+  public Optional<Integer> getNumber() {
+    return Optional.ofNullable(number);
   }
 }

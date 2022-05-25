@@ -12,8 +12,8 @@ public class EventFactory {
 
   private final ApplicationEventPublisher applicationEventPublisher;
 
-  public void gameStart(UUID gameId, boolean userInput) {
-    applicationEventPublisher.publishEvent(new GameStartEvent(gameId, userInput));
+  public void gameStart(UUID gameId, Integer number) {
+    applicationEventPublisher.publishEvent(new GameStartEvent(gameId, number));
   }
 
   public void initiateConsumer(String queue) {

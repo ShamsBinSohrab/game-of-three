@@ -36,10 +36,7 @@ public class GameStartEventListener {
   @EventListener
   public void doStartGame(GameStartEvent event) {
     var gameId = (UUID) event.getSource();
-    if (event.isUserInput()) {
-      // TODO take user input
-    }
-    var number = nextInt();
+    var number = event.getNumber().orElse(nextInt());
     var move = Move.initialMove(gameId, number);
     var incomingQueue = randomAlphanumeric(10);
     var correlationId = UUID.randomUUID();

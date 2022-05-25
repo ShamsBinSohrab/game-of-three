@@ -1,3 +1,3 @@
 package app.player.web.models;
 
-public record GameRequest(boolean userInput) {}
+public record GameRequest(Integer number) {}

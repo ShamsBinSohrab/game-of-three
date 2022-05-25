@@ -23,7 +23,7 @@ public class GameController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   GameResponse start(@RequestBody GameRequest request) {
     var gameId = UUID.randomUUID();
-    eventFactory.gameStart(gameId, request.userInput());
+    eventFactory.gameStart(gameId, request.number());
     return new GameResponse(gameId);
   }
 }
