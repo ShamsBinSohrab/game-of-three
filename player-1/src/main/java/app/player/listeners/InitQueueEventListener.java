@@ -11,7 +11,6 @@ import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -38,8 +37,6 @@ public class InitQueueEventListener {
     return (tag, message) -> {
       var move = (Move) deserialize(message.getBody());
       if (Objects.nonNull(move)) {
-        var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
-        eventFactory.logReceivedMove(move, correlationId);
         if (move.didOpponentWin()) {
           log.info("Opponent won game: {}", move.gameId());
           eventFactory.cancelConsumer(tag);
