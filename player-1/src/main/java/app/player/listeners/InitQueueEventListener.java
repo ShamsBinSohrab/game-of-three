@@ -3,6 +3,7 @@ package app.player.listeners;
 import static org.springframework.util.SerializationUtils.deserialize;
 
 import app.player.domains.Move;
+import app.player.events.DeleteQueueEvent;
 import app.player.events.InitiateConsumerEvent;
 import app.player.events.ReplyMoveEvent;
 import com.rabbitmq.client.CancelCallback;
@@ -43,13 +44,18 @@ public class InitQueueEventListener {
   @EventListener
   public void doInitQueues(InitiateConsumerEvent event) throws IOException {
     var incomingQueue = (String) event.getSource();
-    channel.queueDeclare(incomingQueue, false, false, true, Collections.emptyMap());
+    channel.queueDeclare(incomingQueue, false, true, true, Collections.emptyMap());
     channel.basicConsume(incomingQueue, deliverCallback(incomingQueue), cancelCallback());
   }
 
   private DeliverCallback deliverCallback(String incomingQueue) {
     return (tag, message) -> {
       var move = (Move) deserialize(message.getBody());
+      if (move.didOpponentWin()) {
+        log.debug("Opponent won");
+        applicationEventPublisher.publishEvent(new DeleteQueueEvent(incomingQueue));
+        return;
+      }
       var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
       applicationEventPublisher.publishEvent(
           new ReplyMoveEvent(move, incomingQueue, correlationId));

@@ -18,6 +18,14 @@ public record Move(UUID gameId, int number) implements Serializable {
     return number == 1;
   }
 
+  public boolean didOpponentWin() {
+    return number == 0;
+  }
+
+  public Move checkmate() {
+    return new Move(gameId, 0);
+  }
+
   private int calculateNext() {
     return (number + calculatePivot(number)) / DIVISOR;
   }

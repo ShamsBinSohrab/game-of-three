@@ -1,6 +1,7 @@
 package app.player.listeners;
 
 import app.player.domains.Move;
+import app.player.events.DeleteQueueEvent;
 import app.player.events.LogReceivedMoveEvent;
 import app.player.events.LogSentMoveEvent;
 import app.player.events.ReplyMoveEvent;
@@ -40,14 +41,22 @@ public class ReplyMoveEventListener {
     applicationEventPublisher.publishEvent(new LogReceivedMoveEvent(move, receivedCorrelationId));
 
     var nextMove = move.newMove();
+    var correlationId = UUID.randomUUID();
     if (nextMove.didIWin()) {
       log.debug("I won");
-    } else {
-      var correlationId = UUID.randomUUID();
       rabbitTemplate.convertAndSend(
-          outgoingQueue, nextMove, messagePostProcessor(correlationId, incomingQueue));
-      applicationEventPublisher.publishEvent(new LogSentMoveEvent(nextMove, receivedCorrelationId));
+          outgoingQueue,
+          nextMove.checkmate(),
+          msg -> {
+            msg.getMessageProperties().setCorrelationId(correlationId.toString());
+            return msg;
+          });
+      applicationEventPublisher.publishEvent(new DeleteQueueEvent(incomingQueue));
+      return;
     }
+    rabbitTemplate.convertAndSend(
+        outgoingQueue, nextMove, messagePostProcessor(correlationId, incomingQueue));
+    applicationEventPublisher.publishEvent(new LogSentMoveEvent(nextMove, receivedCorrelationId));
   }
 
   private MessagePostProcessor messagePostProcessor(UUID correlationId, String incomingQueue) {
