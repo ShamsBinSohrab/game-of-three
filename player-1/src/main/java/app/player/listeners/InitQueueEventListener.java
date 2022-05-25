@@ -3,7 +3,6 @@ package app.player.listeners;
 import static org.springframework.util.SerializationUtils.deserialize;
 
 import app.player.domains.Move;
-import app.player.events.DeleteQueueEvent;
 import app.player.events.InitiateConsumerEvent;
 import app.player.events.ReplyMoveEvent;
 import com.rabbitmq.client.CancelCallback;
@@ -11,10 +10,10 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -22,23 +21,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InitQueueEventListener {
 
   private final Channel channel;
-  private final String outgoingQueue;
-  private final RabbitTemplate rabbitTemplate;
   private final ApplicationEventPublisher applicationEventPublisher;
-
-  public InitQueueEventListener(
-      Channel channel,
-      RabbitTemplate rabbitTemplate,
-      ApplicationEventPublisher applicationEventPublisher,
-      @Value("${game.queue.name}") String outgoingQueue) {
-    this.channel = channel;
-    this.rabbitTemplate = rabbitTemplate;
-    this.applicationEventPublisher = applicationEventPublisher;
-    this.outgoingQueue = outgoingQueue;
-  }
 
   @Async
   @EventListener
@@ -51,14 +38,16 @@ public class InitQueueEventListener {
   private DeliverCallback deliverCallback(String incomingQueue) {
     return (tag, message) -> {
       var move = (Move) deserialize(message.getBody());
-      if (move.didOpponentWin()) {
-        log.debug("Opponent won");
-        applicationEventPublisher.publishEvent(new DeleteQueueEvent(incomingQueue));
-        return;
+      if (Objects.nonNull(move)) {
+        if (move.didOpponentWin()) {
+          log.info("Opponent won game: {}", move.gameId());
+          channel.basicCancel(tag);
+          return;
+        }
+        var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
+        applicationEventPublisher.publishEvent(
+            new ReplyMoveEvent(move, incomingQueue, correlationId));
       }
-      var correlationId = UUID.fromString(message.getProperties().getCorrelationId());
-      applicationEventPublisher.publishEvent(
-          new ReplyMoveEvent(move, incomingQueue, correlationId));
     };
   }
 
