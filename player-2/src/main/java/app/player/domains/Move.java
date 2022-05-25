@@ -10,7 +10,11 @@ public record Move(UUID gameId, int number) implements Serializable {
   private static final short NEGATIVE_ONE = 1;
   private static final short DIVISOR = 3;
 
-  public Move newMove() {
+  public static Move initialMove(UUID gameId, int number) {
+    return new Move(gameId, number);
+  }
+
+  public Move nextMove() {
     return new Move(gameId, calculateNext());
   }
 

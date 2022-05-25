@@ -19,12 +19,12 @@ public class GameRequestListener {
   @RabbitListener(queues = "game-queue", concurrency = "5")
   void listenGameRequest(Move move, Message message) {
     if (move.didOpponentWin()) {
-      log.debug("Opponent won");
+      log.info("Opponent won game: {}", move.gameId());
       return;
     }
     log.debug(
         "Received message: {}, move: {}", message.getMessageProperties().getCorrelationId(), move);
-    var nextMove = move.newMove();
+    var nextMove = move.nextMove();
     var correlationId = UUID.randomUUID().toString();
     if (nextMove.didIWin()) {
       rabbitTemplate.convertAndSend(
