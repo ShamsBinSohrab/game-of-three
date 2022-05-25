@@ -1,7 +1,6 @@
 package app.player.listeners;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.apache.commons.lang3.RandomUtils.nextInt;
 
 import app.player.domains.Move;
 import app.player.events.GameStartEvent;
@@ -38,9 +37,9 @@ public class GameStartEventListener {
   @EventListener
   public void doStartGame(GameStartEvent event) {
     var gameId = (UUID) event.getSource();
+    var userInput = event.isUserInput();
+    var move = Move.initialMove(gameId, userInput);
     var incomingQueue = randomAlphanumeric(10);
-    var number = nextInt();
-    var move = new Move(gameId, number);
     var correlationId = UUID.randomUUID();
     applicationEventPublisher.publishEvent(new InitiateConsumerEvent(incomingQueue));
     rabbitTemplate.convertAndSend(

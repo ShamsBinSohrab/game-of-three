@@ -1,17 +1,23 @@
 package app.player.domains;
 
+import static org.apache.commons.lang3.RandomUtils.nextInt;
+
 import java.io.Serializable;
 import java.util.UUID;
 
-public record Move(UUID gameId, int number) implements Serializable {
+public record Move(UUID gameId, boolean userInput, int number) implements Serializable {
 
   private static final short POSITIVE_ONE = 1;
   private static final short ZERO = 0;
   private static final short NEGATIVE_ONE = 1;
   private static final short DIVISOR = 3;
 
+  public static Move initialMove(UUID gameId, boolean userInput) {
+    return new Move(gameId, userInput, nextInt());
+  }
+
   public Move newMove() {
-    return new Move(gameId, calculateNext());
+    return new Move(gameId, userInput, calculateNext());
   }
 
   public boolean didIWin() {
@@ -23,7 +29,7 @@ public record Move(UUID gameId, int number) implements Serializable {
   }
 
   public Move checkmate() {
-    return new Move(gameId, 0);
+    return new Move(gameId, userInput, 0);
   }
 
   private int calculateNext() {
