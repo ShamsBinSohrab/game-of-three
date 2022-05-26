@@ -13,6 +13,7 @@ services:
       - GAME_QUEUE_NAME=game-queue
       - GAME_EXCHANGE_NAME=game-queue
       - SPRING_RABBITMQ_HOST=game-rabbitmq
+      - LOGGING_LEVEL_APP=info
     restart: always
     depends_on:
       - game-rabbitmq
@@ -27,6 +28,7 @@ services:
       - GAME_QUEUE_NAME=game-queue
       - GAME_EXCHANGE_NAME=game-queue
       - SPRING_RABBITMQ_HOST=game-rabbitmq
+      - LOGGING_LEVEL_APP=info
     restart: always
     depends_on:
       - game-rabbitmq

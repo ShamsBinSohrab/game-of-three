@@ -37,9 +37,4 @@ build/
 ### Mac OS ###
 .DS_Store
 /player-1/.mvn/
-/.idea/encodings.xml
-/.idea/misc.xml
-/.idea/uiDesigner.xml
-/.idea/vcs.xml
-/.idea/workspace.xml
-/.idea/google-java-format.xml
+/.idea/*
