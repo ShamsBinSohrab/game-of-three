@@ -7,11 +7,8 @@ import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
-import org.springframework.boot.autoconfigure.amqp.RabbitTemplateConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,26 +31,7 @@ public class RabbitConfiguration {
   }
 
   @Bean
-  public RabbitTemplate rabbitTemplate(
-      CachingConnectionFactory connectionFactory, RabbitTemplateConfigurer configurer) {
-    var template = new RabbitTemplate();
-    configurer.configure(template, connectionFactory);
-    return template;
-  }
-
-  @Bean
-  public CachingConnectionFactory getConnectionFactory(RabbitProperties properties) {
-    var factory = new CachingConnectionFactory();
-    factory.setHost(properties.getHost());
-    factory.setPort(properties.getPort());
-    factory.setUsername(properties.getUsername());
-    factory.setPassword(properties.getPassword());
-    factory.setVirtualHost(properties.getVirtualHost());
-    return factory;
-  }
-
-  @Bean
-  public Channel channel(CachingConnectionFactory connectionFactory) {
+  public Channel channel(ConnectionFactory connectionFactory) {
     return connectionFactory.createConnection().createChannel(true);
   }
 }

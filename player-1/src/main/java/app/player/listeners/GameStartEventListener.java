@@ -4,15 +4,13 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 
 import app.player.domains.Move;
+import app.player.events.EventFactory;
 import app.player.events.GameStartEvent;
-import app.player.events.InitiateConsumerEvent;
-import app.player.events.LogSentMoveEvent;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -21,16 +19,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class GameStartEventListener {
 
-  private final RabbitTemplate rabbitTemplate;
-  private final ApplicationEventPublisher applicationEventPublisher;
   private final String outgoingQueue;
+  private final EventFactory eventFactory;
+  private final RabbitTemplate rabbitTemplate;
 
   public GameStartEventListener(
+      EventFactory eventFactory,
       RabbitTemplate rabbitTemplate,
-      ApplicationEventPublisher applicationEventPublisher,
       @Value("${game.queue.name}") String outgoingQueue) {
     this.rabbitTemplate = rabbitTemplate;
-    this.applicationEventPublisher = applicationEventPublisher;
+    this.eventFactory = eventFactory;
     this.outgoingQueue = outgoingQueue;
   }
 
@@ -38,14 +36,14 @@ public class GameStartEventListener {
   @EventListener
   public void doStartGame(GameStartEvent event) {
     var gameId = (UUID) event.getSource();
+    var number = event.getNumber().orElse(nextInt());
+    var move = Move.initialMove(gameId, number);
     var incomingQueue = randomAlphanumeric(10);
-    var number = nextInt();
-    var move = new Move(gameId, number);
     var correlationId = UUID.randomUUID();
-    applicationEventPublisher.publishEvent(new InitiateConsumerEvent(incomingQueue));
+    eventFactory.initiateConsumer(incomingQueue);
     rabbitTemplate.convertAndSend(
         outgoingQueue, move, messagePostProcessor(correlationId, incomingQueue));
-    applicationEventPublisher.publishEvent(new LogSentMoveEvent(move, correlationId));
+    eventFactory.logSentMove(move, correlationId);
   }
 
   private MessagePostProcessor messagePostProcessor(UUID correlationId, String incomingQueue) {

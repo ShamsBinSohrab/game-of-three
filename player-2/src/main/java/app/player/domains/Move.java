@@ -10,12 +10,24 @@ public record Move(UUID gameId, int number) implements Serializable {
   private static final short NEGATIVE_ONE = 1;
   private static final short DIVISOR = 3;
 
-  public Move newMove() {
+  public static Move initialMove(UUID gameId, int number) {
+    return new Move(gameId, number);
+  }
+
+  public Move nextMove() {
     return new Move(gameId, calculateNext());
   }
 
   public boolean didIWin() {
     return number == 1;
+  }
+
+  public boolean didOpponentWin() {
+    return number == 0;
+  }
+
+  public Move checkmate() {
+    return new Move(gameId, 0);
   }
 
   private int calculateNext() {

@@ -1,49 +1,50 @@
 package app.player.listeners;
 
 import app.player.domains.Move;
-import app.player.events.LogReceivedMoveEvent;
-import app.player.events.LogSentMoveEvent;
+import app.player.events.EventFactory;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class GameRequestListener {
 
-    private final RabbitTemplate rabbitTemplate;
-    private final ApplicationEventPublisher applicationEventPublisher;
+  private final EventFactory eventFactory;
+  private final RabbitTemplate rabbitTemplate;
 
-    @RabbitListener(queues = "game-queue")
-    void listenGameRequest(Move move, Message message) {
-        var receivedCorrelationId = UUID.fromString(message.getMessageProperties().getCorrelationId());
-        applicationEventPublisher.publishEvent(new LogReceivedMoveEvent(move, receivedCorrelationId));
-
-        var nextMove = move.newMove();
-        var replyToQueue = message.getMessageProperties().getReplyTo();
-        if (nextMove.didIWin()) {
-            log.debug("I won");
-        } else {
-            var correlationId = UUID.randomUUID();
-            rabbitTemplate.convertAndSend(
-                    replyToQueue, nextMove, messagePostProcessor(correlationId, replyToQueue));
-            applicationEventPublisher.publishEvent(new LogSentMoveEvent(nextMove, correlationId));
-        }
+  @RabbitListener(queues = "game-queue", concurrency = "5")
+  void listenGameRequest(Move move, Message message) {
+    if (move.didOpponentWin()) {
+      log.info("Opponent won game: {}", move.gameId());
+      return;
     }
+    var receivedCorrelationId = UUID.fromString(message.getMessageProperties().getCorrelationId());
+    eventFactory.logReceivedMove(move, receivedCorrelationId);
 
-    private MessagePostProcessor messagePostProcessor(UUID correlationId, String incomingQueue) {
-        return message -> {
-            message.getMessageProperties().setCorrelationId(correlationId.toString());
-            message.getMessageProperties().setReplyTo(incomingQueue);
-            return message;
-        };
+    var nextMove = move.nextMove();
+    var correlationId = UUID.randomUUID();
+    if (nextMove.didIWin()) {
+      log.info("I won game: {}", nextMove.gameId());
+      send(message.getMessageProperties().getReplyTo(), nextMove.checkmate(), correlationId);
+      return;
     }
+    send(message.getMessageProperties().getReplyTo(), nextMove, correlationId);
+    eventFactory.logSentMove(nextMove, correlationId);
+  }
+
+  private void send(String replyQueue, Move move, UUID correlationId) {
+    rabbitTemplate.convertAndSend(
+        replyQueue,
+        move,
+        message -> {
+          message.getMessageProperties().setCorrelationId(correlationId.toString());
+          return message;
+        });
+  }
 }
