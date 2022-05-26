@@ -1,0 +1,39 @@
+# This configuration is intended for development purpose.
+version: '3.8'
+services:
+  game-rabbitmq:
+    image: rabbitmq:3.10.2-management
+    ports:
+      - "15672:15672"
+    networks:
+      - public
+  player-one:
+    image: game_player_one
+    environment:
+      - GAME_QUEUE_NAME=game-queue
+      - GAME_EXCHANGE_NAME=game-queue
+      - SPRING_RABBITMQ_HOST=game-rabbitmq
+    restart: always
+    depends_on:
+      - game-rabbitmq
+    ports:
+      - "9091:9091"
+    command: "echo 'Sleeping for 10 seconds' && sleep 10"
+    networks:
+      - public
+  player-two:
+    image: game_player_two
+    environment:
+      - GAME_QUEUE_NAME=game-queue
+      - GAME_EXCHANGE_NAME=game-queue
+      - SPRING_RABBITMQ_HOST=game-rabbitmq
+    restart: always
+    depends_on:
+      - game-rabbitmq
+    command: "echo 'Sleeping for 10 seconds' && sleep 10"
+    networks:
+      - public
+networks:
+  public:
+    name: public_network
+

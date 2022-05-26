@@ -30,7 +30,7 @@
                             </platforms>
                         </from>
                         <to>
-                            <image>game_player_2:latest</image>
+                            <image>game_player_two:latest</image>
                         </to>
                     </configuration>
                 </plugin>
