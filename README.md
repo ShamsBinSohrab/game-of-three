@@ -20,3 +20,5 @@ curl -X POST --location "http://localhost:9091/game/start" \
           \"number\": <any number | null>
         }"
 ```
+
+-Djib-maven-plugin.architecture=arm64
