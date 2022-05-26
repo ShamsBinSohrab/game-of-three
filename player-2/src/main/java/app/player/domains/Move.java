@@ -1,18 +1,17 @@
 package app.player.domains;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.Serializable;
 import java.util.UUID;
 
+@Slf4j
 public record Move(UUID gameId, int number) implements Serializable {
 
-  private static final short POSITIVE_ONE = 1;
-  private static final short ZERO = 0;
-  private static final short NEGATIVE_ONE = 1;
-  private static final short DIVISOR = 3;
-
-  public static Move initialMove(UUID gameId, int number) {
-    return new Move(gameId, number);
-  }
+  private static final int POSITIVE_ONE = 1;
+  private static final int ZERO = 0;
+  private static final int NEGATIVE_ONE = -1;
+  private static final int DIVISOR = 3;
 
   public Move nextMove() {
     return new Move(gameId, calculateNext());
@@ -31,10 +30,13 @@ public record Move(UUID gameId, int number) implements Serializable {
   }
 
   private int calculateNext() {
-    return (number + calculatePivot(number)) / DIVISOR;
+    int numberToAdd = getNumberToAdd(number);
+    int newNumber = (number + numberToAdd) / DIVISOR;
+    log.info("Initial: {}, Added: {}, Result: {}", number, numberToAdd, newNumber);
+    return newNumber;
   }
 
-  private int calculatePivot(int number) {
+  private int getNumberToAdd(int number) {
     if (number < DIVISOR) {
       return POSITIVE_ONE;
     }

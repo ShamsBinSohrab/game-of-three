@@ -16,7 +16,7 @@ public class LogMoveEventListener {
   @EventListener
   public void doLogSentMove(LogSentMoveEvent event) {
     var move = (Move) event.getSource();
-    log.info(
+    log.debug(
         "Game: {} => sent: {}, correlation: {}",
         move.gameId(),
         move.number(),
@@ -27,7 +27,7 @@ public class LogMoveEventListener {
   @EventListener
   public void doLogReceivedMove(LogReceivedMoveEvent event) {
     var move = (Move) event.getSource();
-    log.info(
+    log.debug(
         "Game: {} => received: {}, correlation: {}",
         move.gameId(),
         move.number(),
