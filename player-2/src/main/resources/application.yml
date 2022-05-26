@@ -7,7 +7,7 @@ server:
   port: 9092
 spring:
   application:
-    name: player-2
+    name: player-two
   rabbitmq:
     host: localhost
     port: 5672
