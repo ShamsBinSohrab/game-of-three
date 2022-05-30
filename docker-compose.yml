@@ -3,7 +3,6 @@ version: '3.8'
 services:
   game-rabbitmq:
     image: rabbitmq:3.10.2-management
-    restart: always
     ports:
       - "15672:15672"
     networks:
@@ -15,7 +14,10 @@ services:
       - GAME_EXCHANGE_NAME=game-queue
       - SPRING_RABBITMQ_HOST=game-rabbitmq
       - LOGGING_LEVEL_APP=info
-    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
     depends_on:
       - game-rabbitmq
     ports:
@@ -30,7 +32,10 @@ services:
       - GAME_EXCHANGE_NAME=game-queue
       - SPRING_RABBITMQ_HOST=game-rabbitmq
       - LOGGING_LEVEL_APP=info
-    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
     depends_on:
       - game-rabbitmq
     command: [ "sleep", "10" ]
