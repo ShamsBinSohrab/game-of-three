@@ -3,6 +3,7 @@ version: '3.8'
 services:
   game-rabbitmq:
     image: rabbitmq:3.10.2-management
+    restart: always
     ports:
       - "15672:15672"
     networks:
@@ -19,7 +20,7 @@ services:
       - game-rabbitmq
     ports:
       - "9091:9091"
-    command: "echo 'Sleeping for 10 seconds' && sleep 10"
+    command: [ "sleep", "10" ]
     networks:
       - public
   player-two:
@@ -32,7 +33,7 @@ services:
     restart: always
     depends_on:
       - game-rabbitmq
-    command: "echo 'Sleeping for 10 seconds' && sleep 10"
+    command: [ "sleep", "10" ]
     networks:
       - public
 networks:
